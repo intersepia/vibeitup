@@ -1,0 +1,28 @@
+{
+  "name": "folio-image-sorter",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test:e2e": "playwright test",
+    "format": "prettier --write src tests *.js *.json index.html",
+    "format:check": "prettier --check src tests *.js *.json index.html"
+  },
+  "dependencies": {
+    "@fontsource-variable/dm-sans": "^5.3.0",
+    "vue": "^3.5.18"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.63.0",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "prettier": "^3.9.6",
+    "vite": "^7.1.3"
+  }
+}
