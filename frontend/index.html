@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VIBEITUP — System Intelligence Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@300;500;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web@2.0.3/script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.4.15/dist/vue.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#030712',
+            void: '#060c18',
+            slate: '#0a1022',
+            steel: '#0f1730',
+            frost: '#a8b8d4',
+            neon: '#00e8ff',
+            neon2: '#8a3ffc',
+            neon3: '#ff3b6e',
+            amber: '#ffb347',
+            emerald: '#34d399',
+          },
+          fontFamily: {
+            orbitron: ['"Orbitron"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+            inter: ['"Inter"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    html, body { background: #030712; color: #e8f0ff; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+    ::selection { background: rgba(0,232,255,0.2); color: #fff; }
+    .glass { background: rgba(255,255,255,0.025); backdrop-filter: blur(20px) saturate(130%); -webkit-backdrop-filter: blur(20px) saturate(130%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; }
+    .glass-panel { background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04); }
+    .glass-panel:hover { border-color: rgba(0,232,255,0.15); box-shadow: 0 12px 40px rgba(0,0,0,0.6), inset 0 0 30px rgba(0,232,255,0.03); transition: all .3s ease; }
+    .gradient-text { background: linear-gradient(135deg, #00e8ff, #8a3ffc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .gradient-text-2 { background: linear-gradient(135deg, #ff3b6e, #ffb347); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .gradient-text-3 { background: linear-gradient(135deg, #8a3ffc, #00e8ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .neon-text { text-shadow: 0 0 25px rgba(0,232,255,0.3); }
+    @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+    .shimmer { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent); background-size: 200% auto; animation: shimmer 4s infinite linear; }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+    .float-anim { animation: float 6s ease-in-out infinite; }
+    .metric-ring { position: relative; width: 140px; height: 140px; border-radius: 50%; background: conic-gradient(from 0deg, #00e8ff 0%, #8a3ffc 60%, #ff3b6e 100%); padding: 8px; box-shadow: 0 0 30px rgba(0,232,255,0.15); }
+    .metric-inner { width: 100%; height: 100%; border-radius: 50%; background: #030712; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+    .nav-glow:hover { box-shadow: 0 0 25px rgba(0,232,255,0.25); border-color: rgba(0,232,255,0.3); }
+    .card-glow { position: relative; overflow: hidden; }
+    .card-glow::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle at 30% 30%, rgba(0,232,255,0.08), transparent 60%); pointer-events: none; }
+    .hex-grid { position: relative; width: 100%; max-width: 500px; aspect-ratio: 1; }
+    .hex-item { position: absolute; width: 14%; aspect-ratio: 1; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); border: 1px solid rgba(255,255,255,0.1); transition: all .4s ease; }
+    .hex-item:hover { border-color: rgba(0,232,255,0.6); box-shadow: 0 0 15px rgba(0,232,255,0.3), inset 0 0 15px rgba(0,232,255,0.2); transform: scale(1.1); z-index: 10; }
+    .scrollbar-thin::-webkit-scrollbar { width: 4px; }
+    .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(0,232,255,0.15); border-radius: 10px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: rgba(0,232,255,0.3); }
+  </style>
+</head>
+<body class="min-h-screen relative selection:bg-[rgba(0,232,255,0.2)]">
+  <!-- Ambient background blobs -->
+  <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div class="absolute -top-40 -left-40 w-[800px] h-[800px] rounded-full bg-[radial-gradient(circle_at_center,_#00e8ff_0%,_transparent_70%)] opacity-[0.08] blur-[140px]"></div>
+    <div class="absolute -bottom-48 -right-48 w-[900px] h-[900px] rounded-full bg-[radial-gradient(circle_at_center,_#8a3ffc_0%,_transparent_70%)] opacity-[0.07] blur-[140px]"></div>
+    <div class="absolute top-1/2 left-1/4 w-[600px] h-[500px] rounded-full bg-[radial-gradient(ellipse_at_center,_#ff3b6e_0%,_transparent_60%)] opacity-[0.05] blur-[120px]"></div>
+    <div class="absolute top-20 right-20 w-[300px] h-[300px] rounded-full bg-[radial-gradient(circle_at_center,_#ffb347_0%,_transparent_70%)] opacity-[0.06] blur-[100px]"></div>
+  </div>
+
+  <div id="app" class="relative z-10 min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="glass fixed top-0 left-0 right-0 z-50 px-6 md:px-10 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <div class="relative w-11 h-11 rounded-2xl bg-gradient-to-tr from-neon to-neon2 flex items-center justify-center shadow-[0_0_30px_rgba(0,232,255,0.35)] float-anim">
+          <i class="ph-fill ph-hexagon text-white text-2xl"></i>
+        </div>
+        <div>
+          <h1 class="font-orbitron text-xl font-black tracking-tight leading-none">
+            <span class="gradient-text neon-text">VIBEIT</span><span class="gradient-text-2">UP</span>
+          </h1>
+          <p class="text-[9px] text-frost/30 font-mono tracking-[0.35em] uppercase">System Intelligence</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 md:gap-8">
+        <nav class="hidden md:flex items-center gap-6 text-[11px] font-mono text-frost/50 uppercase tracking-wider">
+          <a href="#" class="hover:text-neon transition-colors nav-glow px-2 py-1 rounded-lg">Overview</a>
+          <a href="#" class="hover:text-neon transition-colors nav-glow px-2 py-1 rounded-lg">Analytics</a>
+          <a href="#" class="hover:text-neon transition-colors nav-glow px-2 py-1 rounded-lg">Nodes</a>
+          <a href="#" class="hover:text-neon transition-colors nav-glow px-2 py-1 rounded-lg">Security</a>
+        </nav>
+        <div class="flex items-center gap-3 bg-ink/60 rounded-full px-4 py-2 border border-white/[0.06] text-[11px] font-mono text-frost/70 shadow-inner">
+          <span class="w-[6px] h-[6px] rounded-full bg-emerald-400 animate-pulse shadow-[0_0_6px_#34d399]"></span>
+          <span class="text-emerald-400 font-bold">LIVE</span>
+          <span class="text-frost/20">|</span>
+          <span>{{ currentTime }}</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="pt-24 px-4 md:px-8 lg:px-14 pb-16 max-w-[1600px] mx-auto w-full">
+      <!-- Hero / Title -->
+      <section class="mb-10 relative overflow-hidden rounded-[28px] glass p-8 md:p-14">
+        <div class="absolute inset-0 shimmer opacity-50"></div>
+        <div class="absolute top-0 right-0 w-96 h-96 bg-neon/10 rounded-full blur-[120px] -translate-y-1/3 translate-x-1/4"></div>
+        <div class="relative z-10 max-w-2xl">
+          <p class="text-[10px] font-mono text-frost/30 uppercase tracking-[0.3em] mb-3">Real-Time System Intelligence • v2.4.0</p>
+          <h2 class="font-orbitron text-5xl md:text-7xl lg:text-8xl font-black leading-[0.88] mb-6 tracking-tight">
+            <span class="gradient-text-2 neon-text">NEURAL</span><br>
+            <span class="text-white">DASHBOARD</span>
+          </h2>
+          <p class="text-frost/40 text-base md:text-lg max-w-lg leading-relaxed font-light mb-6">
+            Real-time telemetry, predictive metrics, and system health — visualized through glass, light, and hexagonal topology.
+          </p>
+          <div class="flex gap-3">
+            <a href="#metrics" class="inline-flex items-center gap-3 px-7 py-3.5 rounded-full bg-gradient-to-r from-neon/20 to-neon2/20 border border-neon/20 text-sm font-orbitron font-bold text-white hover:shadow-[0_0_30px_rgba(0,232,255,0.25)] transition-all hover:-translate-y-0.5">
+              <span>Explore Metrics</span>
+              <i class="ph-bold ph-arrow-down-right"></i>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Top Stats Row -->
+      <section id="metrics" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div v-for="m in metrics" :key="m.label" class="glass-panel card-glow p-6 relative overflow-hidden group">
+          <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-neon/10 to-transparent rounded-full -translate-y-1/3 translate-x-1/4"></div>
+          <div class="flex justify-between items-start mb-5 relative z-10">
+            <div>
+              <h4 class="text-[10px] uppercase tracking-[0.25em] text-frost/30 font-mono font-bold mb-1">{{ m.label }}</h4>
+              <p class="font-orbitron text-3xl md:text-4xl font-black text-white tracking-tight">
+                {{ m.value }} <span class="text-base text-frost/30 font-light">{{ m.unit }}</span>
+              </p>
+            </div>
+            <div class="w-9 h-9 rounded-xl bg-ink/50 border border-white/[0.08] flex items-center justify-center shadow-inner">
+              <i class="ph-duotone text-xl" :class="iconFor(m.label)"></i>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 text-[11px] font-mono relative z-10">
+            <span :class="m.delta >= 0 ? 'text-emerald-400' : 'text-rose-400'" class="font-bold">{{ m.delta >= 0 ? '+' + m.delta : m.delta }}%</span>
+            <span class="text-frost/20">vs interval</span>
+            <div class="ml-auto flex gap-[3px] h-3 items-end">
+              <div v-for="(b,i) in randomBars(8)" :key="i" :style="{ height: b + 'px', background: gradientColor(i, 8) }" class="w-[3px] rounded-full opacity-60"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Main Content: 3 Columns -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left Column: Charts -->
+        <div class="lg:col-span-4 flex flex-col gap-6">
+          <!-- Mini Line Chart -->
+          <div class="glass-panel p-6 card-glow">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-orbitron text-base font-bold text-white">Latency Trend</h3>
+              <span class="text-[10px] font-mono text-frost/20">LAST 24H</span>
+            </div>
+            <div class="h-40 w-full">
+              <canvas id="latencyChart"></canvas>
+            </div>
+            <div class="mt-4 flex gap-4 text-[11px] font-mono text-frost/40">
+              <span>AVG <strong class="text-white">42ms</strong></span>
+              <span>PEAK <strong class="text-rose-400">128ms</strong></span>
+              <span>TREND <strong class="text-emerald-400">-8.5%</strong></span>
+            </div>
+          </div>
+
+          <!-- Hexagon Grid -->
+          <div class="glass-panel p-6 card-glow relative overflow-hidden">
+            <h3 class="font-orbitron text-base font-bold text-white mb-2">Node Topology</h3>
+            <p class="text-[10px] font-mono text-frost/20 mb-5">HEXAGONAL CLUSTER MAPPING</p>
+            <div class="flex items-center justify-center" style="min-height:320px;">
+              <div class="hex-grid relative" id="hexGrid"></div>
+            </div>
+          </div>
+
+          <!-- Security Score -->
+          <div class="glass-panel p-6 card-glow">
+            <h3 class="font-orbitron text-base font-bold text-white mb-4">Security Score</h3>
+            <div class="flex items-center gap-6">
+              <div class="relative">
+                <div class="metric-ring">
+                  <div class="metric-inner">
+                    <span class="font-orbitron text-2xl font-black text-white">98.6</span>
+                    <span class="text-[9px] text-frost/30 font-mono">/ 100</span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex-1">
+                <div class="space-y-2">
+                  <div class="flex items-center gap-2 text-[11px] font-mono">
+                    <span class="w-16 text-frost/30">Firewall</span>
+                    <div class="flex-1 h-1.5 bg-ink rounded-full overflow-hidden"><div class="h-full w-[96%] bg-gradient-to-r from-emerald to-neon rounded-full"></div></div>
+                    <span class="w-8 text-right text-white">96</span>
+                  </div>
+                  <div class="flex items-center gap-2 text-[11px] font-mono">
+                    <span class="w-16 text-frost/30">Encryption</span>
+                    <div class="flex-1 h-1.5 bg-ink rounded-full overflow-hidden"><div class="h-full w-[100%] bg-gradient-to-r from-neon to-neon2 rounded-full"></div></div>
+                    <span class="w-8 text-right text-white">100</span>
+                  </div>
+                  <div class="flex items-center gap-2 text-[11px] font-mono">
+                    <span class="w-16 text-frost/30">Auth</span>
+                    <div class="flex-1 h-1.5 bg-ink rounded-full overflow-hidden"><div class="h-full w-[92%] bg-gradient-to-r from-amber to-rose-400 rounded-full"></div></div>
+                    <span class="w-8 text-right text-white">92</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Center Column: Large Hexagon / Main Visual -->
+        <div class="lg:col-span-4 flex flex-col gap-6">
+          <div class="glass-panel p-6 card-glow flex-1 relative overflow-hidden" style="min-height:420px;">
+            <div class="absolute top-4 right-4 text-[10px] font-mono text-frost/20">HEX VISUALIZATION ENGINE</div>
+            <h3 class="font-orbitron text-xl font-black text-white mb-1">Network Topology</h3>
+            <p class="text-[11px] font-mono text-frost/30 mb-6">REAL-TIME NODE CLUSTER • 2.847 ACTIVE NODES</p>
+            <!-- Large Hexagon Canvas -->
+            <div class="relative w-full" style="padding-top:100%;">
+              <canvas id="hexCanvas" class="absolute top-0 left-0 w-full h-full"></canvas>
+            </div>
+            <div class="absolute bottom-4 left-4 bg-ink/80 backdrop-blur-md rounded-xl px-4 py-3 border border-white/5 shadow-2xl">
+              <p class="text-[10px] text-frost/30 font-mono uppercase">Cluster Density</p>
+              <p class="font-orbitron text-xl font-black text-white">2.847 <span class="text-xs text-frost/30 font-light">nodes</span></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Tables & Lists -->
+        <div class="lg:col-span-4 flex flex-col gap-6">
+          <!-- Resolution Grid / Metrics Table -->
+          <div class="glass-panel p-6 card-glow">
+            <div class="flex items-center justify-between mb-5">
+              <h3 class="font-orbitron text-base font-bold text-white">Resolution Grid</h3>
+              <span class="text-[10px] font-mono text-emerald-400">LIVE UPDATES</span>
+            </div>
+            <div class="grid grid-cols-6 gap-2 text-center">
+              <div v-for="cell in resolutionGrid" :key="cell.id" class="aspect-square rounded-lg flex flex-col items-center justify-center text-[10px] font-mono border border-white/[0.06] transition-all hover:border-neon/40 hover:shadow-[inset_0_0_10px_rgba(0,232,255,0.1)]" :class="cell.colorClass">
+                <span class="text-[10px] font-bold">{{ cell.value }}</span>
+                <span class="text-[8px] opacity-60">{{ cell.label }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Servers / Nodes List -->
+          <div class="glass-panel p-6 card-glow">
+            <h3 class="font-orbitron text-base font-bold text-white mb-5">Active Servers</h3>
+            <div class="space-y-2">
+              <div v-for="node in nodes" :key="node.id" class="flex items-center gap-3 p-3 rounded-xl bg-ink/30 border border-white/[0.05] hover:border-white/[0.1] transition-all group">
+                <div class="w-2 h-2 rounded-full shadow-[0_0_6px_currentColor]" :class="node.status === 'online' ? 'bg-emerald-400' : 'bg-amber-400'"></div>
+                <span class="font-mono text-[11px] text-frost/60 w-10">{{ node.id }}</span>
+                <span class="font-mono text-xs text-white flex-1">{{ node.name }}</span>
+                <span class="font-mono text-[10px] text-frost/30">{{ node.cpu }}%</span>
+                <span class="font-mono text-[10px] text-frost/30">{{ node.mem }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Performance Metrics -->
+          <div class="glass-panel p-6 card-glow">
+            <h3 class="font-orbitron text-base font-bold text-white mb-4">Performance Overview</h3>
+            <div class="h-48 w-full">
+              <canvas id="perfChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Section: Detailed Charts -->
+      <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+        <!-- Bandwidth Chart -->
+        <div class="glass-panel p-6 card-glow lg:col-span-2">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-orbitron text-lg font-bold text-white">Bandwidth Usage</h3>
+            <div class="flex gap-4 text-[10px] font-mono text-frost/30">
+              <span>INBOUND <strong class="text-emerald-400 ml-1">78.4 GB/s</strong></span>
+              <span>OUTBOUND <strong class="text-amber ml-1">62.1 GB/s</strong></span>
+            </div>
+          </div>
+          <div class="h-56 w-full">
+            <canvas id="bandwidthChart"></canvas>
+          </div>
+          <div class="mt-4 flex gap-6 text-[11px] font-mono text-frost/20">
+            <span>PEAK <strong class="text-white">128 GB/s</strong></span>
+            <span>AVG <strong class="text-white">82.3 GB/s</strong></span>
+            <span>UTIL <strong class="text-rose-400">73%</strong></span>
+          </div>
+        </div>
+
+        <!-- Security Logs -->
+        <div class="glass-panel p-6 card-glow">
+          <h3 class="font-orbitron text-base font-bold text-white mb-4">Security Logs</h3>
+          <div class="space-y-3">
+            <div v-for="log in securityLogs" :key="log.id" class="flex items-start gap-3 text-[11px] font-mono">
+              <span class="text-[9px] text-frost/20 w-10 shrink-0">{{ log.time }}</span>
+              <span class="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" :class="log.type === 'blocked' ? 'bg-rose-400 shadow-[0_0_6px_#fb7185]' : log.type === 'warn' ? 'bg-amber-400 shadow-[0_0_6px_#fbbf24]' : 'bg-emerald-400 shadow-[0_0_6px_#34d399]'"></span>
+              <div class="flex-1 min-w-0">
+                <p class="text-frost/80 truncate">{{ log.msg }}</p>
+                <p class="text-[9px] text-frost/20">{{ log.detail }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- System Status Banner -->
+      <section class="mt-8 relative overflow-hidden rounded-[28px] glass shimmer p-8 md:p-12">
+        <div class="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-neon/40 to-transparent"></div>
+        <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+          <div>
+            <h3 class="font-orbitron text-3xl md:text-5xl font-black text-white mb-3">System <span class="gradient-text">Status</span></h3>
+            <p class="text-frost/30 text-sm md:text-base max-w-lg">All nodes operational. No anomalies detected. Predictive models running at 99.98% uptime efficiency.</p>
+          </div>
+          <div class="flex gap-3 shrink-0">
+            <div class="glass px-6 py-4 rounded-2xl text-center min-w-[120px]">
+              <p class="text-[9px] text-frost/20 uppercase tracking-[0.2em] font-mono mb-1">Uptime</p>
+              <p class="font-orbitron text-2xl font-black text-emerald-400">99.98%</p>
+            </div>
+            <div class="glass px-6 py-4 rounded-2xl text-center min-w-[120px]">
+              <p class="text-[9px] text-frost/20 uppercase tracking-[0.2em] font-mono mb-1">Nodes</p>
+              <p class="font-orbitron text-2xl font-black text-white">2.847</p>
+            </div>
+            <div class="glass px-6 py-4 rounded-2xl text-center min-w-[120px]">
+              <p class="text-[9px] text-frost/20 uppercase tracking-[0.2em] font-mono mb-1">Latency</p>
+              <p class="font-orbitron text-2xl font-black text-white">42ms</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="border-t border-white/[0.04] py-8 px-8 text-center text-frost/10 text-[10px] tracking-[0.3em] uppercase font-mono">
+      VIBEITUP DASHBOARD • VUE 3 + FASTAPI • 2026 • SYSTEM OPERATIONAL
+    </footer>
+  </div>
+
+  <script>
+    const { createApp, ref, computed, onMounted, nextTick } = Vue;
+
+    createApp({
+      setup() {
+        const metrics = ref([]);
+        const widgets = ref([]);
+        const currentTime = ref('');
+        const nodes = ref([]);
+        const resolutionGrid = ref([]);
+        const securityLogs = ref([]);
+
+        // Icon helper
+        const iconFor = (label) => {
+          const map = { 'Uptime':'ph-cloud-check', 'Latency':'ph-gauge', 'Throughput':'ph-lightning', 'Errors':'ph-warning-circle' };
+          return map[label] || 'ph-chart-line';
+        };
+
+        const randomBars = (n) => Array.from({length:n}, () => Math.round(20 + Math.random()*80));
+        const gradientColor = (i, len) => {
+          const colors = ['#00e8ff','#8a3ffc','#ff3b6e','#ffb347','#34d399','#00e8ff','#8a3ffc','#ff3b6e'];
+          return colors[i % colors.length];
+        };
+
+        // Resolution grid
+        const initGrid = () => {
+          const data = [
+            {id:1, label:'46e', value:'404', colorClass:'bg-ink'},
+            {id:2, label:'67e', value:'67e', colorClass:'bg-ink'},
+            {id:3, label:'24e', value:'55e', colorClass:'bg-ink'},
+            {id:4, label:'55e', value:'87e', colorClass:'bg-ink'},
+            {id:5, label:'25e', value:'55e', colorClass:'bg-ink'},
+            {id:6, label:'85e', value:'16e', colorClass:'text-rose-300'},
+            {id:7, label:'92e', value:'88e', colorClass:'text-emerald-400'},
+            {id:8, label:'48e', value:'48e', colorClass:'bg-ink'},
+            {id:9, label:'28e', value:'58e', colorClass:'text-emerald-400'},
+            {id:10, label:'59e', value:'73e', colorClass:'bg-ink'},
+            {id:11, label:'16e', value:'73e', colorClass:'text-rose-300'},
+            {id:12, label:'26e', value:'85e', colorClass:'bg-ink'},
+            {id:13, label:'85e', value:'35e', colorClass:'text-rose-300'},
+            {id:14, label:'16e', value:'74e', colorClass:'text-emerald-400'},
+            {id:15, label:'24e', value:'83e', colorClass:'bg-ink'},
+            {id:16, label:'83e', value:'28e', colorClass:'text-rose-300'},
+            {id:17, label:'20e', value:'21e', colorClass:'bg-ink'},
+            {id:18, label:'16e', value:'35e', colorClass:'text-rose-300'},
+            {id:19, label:'74e', value:'35e', colorClass:'text-rose-300'},
+            {id:20, label:'34e', value:'74e', colorClass:'text-emerald-400'},
+            {id:21, label:'36e', value:'74e', colorClass:'text-rose-300'},
+            {id:22, label:'28e', value:'28e', colorClass:'bg-ink'},
+            {id:23, label:'03e', value:'24e', colorClass:'bg-ink'},
+            {id:24, label:'21e', value:'86e', colorClass:'text-rose-300'},
+          ];
+          resolutionGrid.value = data;
+        };
+
+        const initNodes = () => {
+          nodes.value = [
+            {id:'N-01', name:'Node Alpha', cpu:42, mem:'32%', status:'online'},
+            {id:'N-02', name:'Node Beta', cpu:68, mem:'48%', status:'online'},
+            {id:'N-03', name:'Node Gamma', cpu:55, mem:'38%', status:'online'},
+            {id:'N-04', name:'Node Delta', cpu:91, mem:'62%', status:'online'},
+            {id:'N-05', name:'Node Epsilon', cpu:34, mem:'22%', status:'online'},
+          ];
+        };
+
+        const initSecurityLogs = () => {
+          securityLogs.value = [
+            {id:1, time:'13:35', msg:'3 Threat Blocked Events', detail:'IP 192.168.1.45', type:'blocked'},
+            {id:2, time:'12:58', msg:'0 Critical Alerts Warning', detail:'No anomalies', type:'warn'},
+            {id:3, time:'12:58', msg:'0 Security Events Lists', detail:'All clear', type:'info'},
+          ];
+        };
+
+        // Hexagon Canvas
+        const drawHexCanvas = () => {
+          const canvas = document.getElementById('hexCanvas');
+          if (!canvas) return;
+          const ctx = canvas.getContext('2d');
+          const dpr = window.devicePixelRatio || 1;
+          const rect = canvas.parentElement.getBoundingClientRect();
+          canvas.width = rect.width * dpr;
+          canvas.height = rect.height * dpr;
+          ctx.scale(dpr, dpr);
+          const W = rect.width, H = rect.height;
+          const cx = W/2, cy = H/2, R = Math.min(W,H)/2.2;
+
+          // Draw a hexagon grid
+          const rows = 5, cols = 5;
+          const hexR = R / (rows + 1);
+
+          for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols - (r%2); c++) {
+              const x = cx - (cols/2 - c) * hexR * 1.7 + (r%2 ? hexR*0.85 : 0);
+              const y = cy - (rows/2 - r) * hexR * 1.5;
+              drawHex(ctx, x, y, hexR, r, c);
+            }
+          }
+        };
+
+        const drawHex = (ctx, cx, cy, R, r, c) => {
+          ctx.beginPath();
+          for (let i = 0; i <= 6; i++) {
+            const angle = Math.PI/3 * i - Math.PI/2;
+            const x = cx + R * Math.cos(angle);
+            const y = cy + R * Math.sin(angle);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          }
+          ctx.closePath();
+          const hue = (r*30 + c*20) % 360;
+          const alpha = 0.15 + Math.random()*0.3;
+          ctx.fillStyle = `hsla(${hue}, 70%, 60%, ${alpha})`;
+          ctx.fill();
+          ctx.strokeStyle = `hsla(${hue}, 80%, 70%, 0.4)`;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        };
+
+        // Hex HTML Grid (CSS)
+        const initHexHTML = () => {
+          const container = document.getElementById('hexGrid');
+          if (!container) return;
+          container.innerHTML = '';
+          // Create a small hex grid with 7 hexes
+          const positions = [
+            {top:'30%', left:'35%'},
+            {top:'15%', left:'48%'},
+            {top:'15%', left:'36%'},
+            {top:'45%', left:'48%'},
+            {top:'45%', left:'24%'},
+            {top:'60%', left:'48%'},
+            {top:'60%', left:'36%'},
+          ];
+          const colors = ['bg-ink','bg-ink','bg-ink','bg-ink','bg-ink','bg-ink','bg-ink'];
+          positions.forEach((pos, i) => {
+            const div = document.createElement('div');
+            div.className = `hex-item ${colors[i % colors.length]} hover:bg-gradient-to-br hover:from-neon/20 hover:to-neon2/20`;
+            div.style.top = pos.top;
+            div.style.left = pos.left;
+            div.innerHTML = `<span class="absolute inset-0 flex items-center justify-center text-[8px] font-mono text-frost/40">N-${i+1}</span>`;
+            container.appendChild(div);
+          });
+        };
+
+        // Chart initialization (after mount)
+        const initCharts = () => {
+          // Latency Chart
+          const latCtx = document.getElementById('latencyChart');
+          if (latCtx) {
+            new Chart(latCtx.getContext('2d'), {
+              type: 'line',
+              data: {
+                labels: ['00','04','08','12','16','20','24'],
+                datasets: [{
+                  label: 'Latency',
+                  data: [55,48,42,51,45,39,42],
+                  borderColor: '#00e8ff',
+                  backgroundColor: 'rgba(0,232,255,0.1)',
+                  tension: 0.4,
+                  fill: true,
+                  pointBackgroundColor: '#00e8ff',
+                  pointBorderColor: '#030712',
+                  pointRadius: 3,
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                  y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8fa3bf', font: { family: 'JetBrains Mono', size: 9 } } },
+                  x: { grid: { display: false }, ticks: { color: '#8fa3bf', font: { family: 'JetBrains Mono', size: 9 } } }
+                }
+              }
+            });
+          }
+
+          // Performance Chart
+          const perfCtx = document.getElementById('perfChart');
+          if (perfCtx) {
+            new Chart(perfCtx.getContext('2d'), {
+              type: 'bar',
+              data: {
+                labels: Array.from({length:12}, (_,i) => `H${i+1}`),
+                datasets: [
+                  {
+                    label: 'Requests',
+                    data: [3200,4100,3900,4800,5200,6100,5800,6400,7100,6900,7400,7800],
+                    backgroundColor: '#00e8ff',
+                    borderRadius: 4,
+                  },
+                  {
+                    label: 'Errors',
+                    data: [12,8,15,6,4,9,3,2,5,1,3,2],
+                    backgroundColor: '#ff3b6e',
+                    borderRadius: 4,
+                  }
+                ]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#8fa3bf', font: { family: 'Inter', size: 10 } } } },
+                scales: {
+                  y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8fa3bf', font: { family: 'JetBrains Mono', size: 9 } } },
+                  x: { grid: { display: false }, ticks: { color: '#8fa3bf', font: { family: 'JetBrains Mono', size: 9 } } }
+                }
+              }
+            });
+          }
+
+          // Bandwidth Chart
+          const bwCtx = document.getElementById('bandwidthChart');
+          if (bwCtx) {
+            new Chart(bwCtx.getContext('2d'), {
+              type: 'line',
+              data: {
+                labels: Array.from({length:16}, (_,i) => `${i}:00`),
+                datasets: [
+                  {
+                    label: 'Inbound',
+                    data: [42,48,55,51,67,82,75,91,88,102,115,120,108,95,88,78],
+                    borderColor: '#34d399',
+                    backgroundColor: 'rgba(52,211,153,0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 0,
+                    borderWidth: 2,
+                  },
+                  {
+                    label: 'Outbound',
+                    data: [28,35,42,38,45,58,52,64,60,72,68,55,48,42,38,35],
+                    borderColor: '#ffb347',
+                    backgroundColor: 'transparent',
+                    tension: 0.4,
+                    fill: false,
+                    pointRadius: 0,
+                    borderWidth: 2,
+                    borderDash: [5,5],
+                  }
+                ]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#8fa3bf', font: { family: 'Inter', size: 10 } } } },
+                scales: {
+                  y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8fa3bf', font: { family: 'JetBrains Mono', size: 9 } } },
+                  x: { grid: { display: false }, ticks: { color: '#8fa3bf', font: { family: 'JetBrains Mono', size: 9 }, maxRotation: 30 } }
+                }
+              }
+            });
+          }
+        };
+
+        // Load demo data
+        onMounted(async () => {
+          initGrid();
+          initNodes();
+          initSecurityLogs();
+          initHexHTML();
+
+          // Demo metrics
+          metrics.value = [
+            {label:'Uptime',value:99.98,delta:0.12,unit:'%'},
+            {label:'Latency',value:42,delta:-8.5,unit:'ms'},
+            {label:'Throughput',value:12840,delta:4.2,unit:'req/s'},
+            {label:'Errors',value:0.3,delta:-0.15,unit:'%'},
+          ];
+
+          // Try fetch
+          try {
+            const [m, w] = await Promise.all([
+              fetch('http://localhost:8000/api/metrics').then(r => r.json()),
+              fetch('http://localhost:8000/api/widgets').then(r => r.json())
+            ]);
+            metrics.value = m;
+          } catch (e) { /* fallback */ }
+
+          // Clock
+          setInterval(() => {
+            currentTime.value = new Date().toLocaleTimeString('de-DE', { hour12: false });
+          }, 1000);
+          currentTime.value = new Date().toLocaleTimeString('de-DE', { hour12: false });
+
+          // Charts after DOM ready
+          nextTick(() => {
+            initCharts();
+            drawHexCanvas();
+            window.addEventListener('resize', () => { drawHexCanvas(); });
+          });
+        });
+
+        return { metrics, currentTime, iconFor, randomBars, gradientColor, resolutionGrid, nodes, securityLogs };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
