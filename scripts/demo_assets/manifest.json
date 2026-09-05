@@ -1,0 +1,128 @@
+[
+  {
+    "asset": "01.jpg",
+    "path": "zur_sortieren/01_atlantikkueste.jpg",
+    "source": "https://unsplash.com/photos/x9NOpiFvJpQ",
+    "provider": "Unsplash"
+  },
+  {
+    "asset": "02.jpg",
+    "path": "zur_sortieren/02_lissabon_im_licht.jpg",
+    "source": "https://unsplash.com/photos/sMVSIKeSbFA",
+    "provider": "Unsplash"
+  },
+  {
+    "asset": "03.jpg",
+    "path": "zur_sortieren/03_am_bergsee.jpg",
+    "source": "https://unsplash.com/s/photos/lake",
+    "provider": "Unsplash"
+  },
+  {
+    "asset": "04.jpg",
+    "path": "zur_sortieren/04_kleine_auszeit.jpg",
+    "source": "https://unsplash.com/photos/s1-VmA26BIc",
+    "provider": "Unsplash"
+  },
+  {
+    "asset": "05.jpg",
+    "path": "zur_sortieren/Portugal 2025/05_wellenrauschen.jpg",
+    "source": "https://unsplash.com/photos/jz34K6k_8-E",
+    "provider": "Unsplash"
+  },
+  {
+    "asset": "06.jpg",
+    "path": "zur_sortieren/Portugal 2025/06_gassen_der_stadt.jpg",
+    "source": "https://unsplash.com/photos/exURRNuuR30",
+    "provider": "Unsplash"
+  },
+  {
+    "asset": "07.jpg",
+    "path": "zur_sortieren/Unterwegs/07_waldspaziergang.jpg",
+    "source": "https://unsplash.com/photos/xzjouTJASSA",
+    "provider": "Unsplash"
+  },
+  {
+    "asset": "08.jpg",
+    "path": "zur_sortieren/Portugal 2025/08_goldene_stunde.jpg",
+    "source": "https://unsplash.com/photos/zEFfW3kXQR8",
+    "provider": "Unsplash"
+  },
+  {
+    "asset": "09.jpg",
+    "path": "zur_sortieren/Unterwegs/09_weit_weg.jpg",
+    "source": "https://unsplash.com/s/photos/mountains-and-trees",
+    "provider": "Unsplash"
+  },
+  {
+    "asset": "10.jpg",
+    "path": "zur_sortieren/Unterwegs/10_sommerwiese.jpg",
+    "source": "https://unsplash.com/photos/Cf8t8pZWp_o",
+    "provider": "Unsplash"
+  },
+  {
+    "asset": "11.jpg",
+    "path": "zur_sortieren/Portugal 2025/11_alte_fassaden.jpg",
+    "source": "https://unsplash.com/photos/X87yB-jvYHw",
+    "provider": "Unsplash"
+  },
+  {
+    "asset": "12.jpg",
+    "path": "zur_sortieren/Portugal 2025/12_am_meer.jpg",
+    "source": "https://unsplash.com/photos/S07ipcMrVLw",
+    "provider": "Unsplash"
+  },
+  {
+    "asset": "13.jpg",
+    "path": "zur_sortieren/Unterwegs/13_bergpanorama.jpg",
+    "source": "https://unsplash.com/s/photos/mountain",
+    "provider": "Unsplash"
+  },
+  {
+    "asset": "14.jpg",
+    "path": "zur_sortieren/Unterwegs/Herbst/14_morgennebel.jpg",
+    "source": "https://unsplash.com/photos/3pW91fGAKiE",
+    "provider": "Unsplash"
+  },
+  {
+    "asset": "15.jpg",
+    "path": "zur_sortieren/Portugal 2025/15_kuestenwege.jpg",
+    "source": "https://unsplash.com/photos/xcjzbwULaNQ",
+    "provider": "Unsplash"
+  },
+  {
+    "asset": "16.jpg",
+    "path": "zur_sortieren/Portugal 2025/16_ueber_den_daechern.jpg",
+    "source": "https://unsplash.com/photos/2x4S0HVPoI8",
+    "provider": "Unsplash"
+  },
+  {
+    "asset": "17.jpg",
+    "path": "zur_sortieren/Unterwegs/Herbst/17_gruene_stille.jpg",
+    "source": "https://unsplash.com/photos/Aq7UusRcm3M",
+    "provider": "Unsplash"
+  },
+  {
+    "asset": "18.jpg",
+    "path": "zur_sortieren/Unterwegs/18_ausblick.jpg",
+    "source": "https://unsplash.com/s/photos/forest-lake",
+    "provider": "Unsplash"
+  },
+  {
+    "asset": "19.jpg",
+    "path": "alben/Alltagsmomente/kaffeezeit.jpg",
+    "source": "https://unsplash.com/photos/gVJc96Cf5N8",
+    "provider": "Unsplash"
+  },
+  {
+    "asset": "20.jpg",
+    "path": "alben/Favoriten/lieblingsmoment.jpg",
+    "source": "https://unsplash.com/photos/RQJId5B-HJg",
+    "provider": "Unsplash"
+  },
+  {
+    "asset": "21.jpg",
+    "path": "alben/Reisen/meer_und_weite.jpg",
+    "source": "https://unsplash.com/photos/Pf9-iMbBob4",
+    "provider": "Unsplash"
+  }
+]

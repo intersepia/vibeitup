@@ -1,0 +1,11 @@
+# Relative paths are resolved against this configuration file.
+# Override with IMAGE_SORTER_BASE_PATH, or copy to config.local.yaml.
+base_path: ./data
+
+server:
+  host: 127.0.0.1
+  port: 8000
+
+# The index is incremental: unchanged files are not hashed again.
+index_on_startup: true
+thumbnail_size: 400
