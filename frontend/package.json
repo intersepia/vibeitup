@@ -1,0 +1,9 @@
+{
+  "name": "vibeitup-frontend",
+  "version": "1.0.0",
+  "description": "Futuristic Dashboard with Vue 3 + FastAPI",
+  "scripts": {
+    "dev": "python3 -m http.server 3000 --directory .",
+    "serve": "python3 -m http.server 3000 --directory ."
+  }
+}
