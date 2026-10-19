@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "vibegraph": {
+      "command": "${CLAUDE_PROJECT_DIR:-.}/scripts/mcp.sh",
+      "args": []
+    }
+  }
+}

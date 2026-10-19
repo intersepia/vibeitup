@@ -1,0 +1,172 @@
+{
+  "schema": 1,
+  "revision": 21,
+  "updated_at": "2026-10-19T09:47:06Z",
+  "root": "root",
+  "nodes": [
+    {
+      "id": "root",
+      "label": "VibeGraph",
+      "note": "Ein lebender Baum aus MCP — links der Root, rechts die Welt.",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "id": "claude",
+      "label": "Claude",
+      "note": "MCP-Client, spricht über stdio",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "id": "tools",
+      "label": "Tool Calls",
+      "note": "",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "id": "add_edge",
+      "label": "add_edge()",
+      "note": "A geht zu B",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "id": "set_parent",
+      "label": "set_parent()",
+      "note": "B gehört zu C",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "id": "delete_edge",
+      "label": "delete_edge()",
+      "note": "löst nur die Kante",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "id": "server",
+      "label": "MCP Server",
+      "note": "Python · stdio · 9 Tools",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "id": "store",
+      "label": "Graph Store",
+      "note": "atomar, klein, nachvollziehbar",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "id": "json",
+      "label": "graph.json",
+      "note": "leicht & lesbar",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "id": "sse",
+      "label": "SSE Hub",
+      "note": "live im Browser",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "id": "viewer",
+      "label": "Browser",
+      "note": "Vue 3 + D3",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "id": "vue",
+      "label": "Vue 3",
+      "note": "reaktives UI",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "id": "d3",
+      "label": "D3.js",
+      "note": "Tidy Tree",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "id": "layout",
+      "label": "Layout",
+      "note": "links → rechts",
+      "created_at": "2026-10-19T09:47:06Z"
+    }
+  ],
+  "edges": [
+    {
+      "source": "root",
+      "target": "claude",
+      "label": "",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "source": "claude",
+      "target": "tools",
+      "label": "ruft auf",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "source": "tools",
+      "target": "add_edge",
+      "label": "",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "source": "tools",
+      "target": "set_parent",
+      "label": "",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "source": "tools",
+      "target": "delete_edge",
+      "label": "",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "source": "root",
+      "target": "server",
+      "label": "",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "source": "server",
+      "target": "store",
+      "label": "schreibt",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "source": "store",
+      "target": "json",
+      "label": "persistiert",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "source": "server",
+      "target": "sse",
+      "label": "streamt",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "source": "root",
+      "target": "viewer",
+      "label": "",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "source": "viewer",
+      "target": "vue",
+      "label": "rendert",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "source": "viewer",
+      "target": "d3",
+      "label": "layoutet",
+      "created_at": "2026-10-19T09:47:06Z"
+    },
+    {
+      "source": "d3",
+      "target": "layout",
+      "label": "berechnet",
+      "created_at": "2026-10-19T09:47:06Z"
+    }
+  ]
+}
