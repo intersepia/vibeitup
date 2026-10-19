@@ -1,0 +1,20 @@
+# Python / Node
+.venv/
+node_modules/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+
+# VibeGraph runtime data (one graph per project by default)
+graph.json
+graph.json.tmp*
+.demo/
+*.corrupt-*
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/

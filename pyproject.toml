@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vibegraph-mcp"
+version = "0.1.0"
+description = "A live, tree-shaped graph for Claude, served over MCP and rendered with Vue + D3."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "VibeGraph" }]
+keywords = ["mcp", "claude", "graph", "d3", "vue", "visualization"]
+dependencies = [
+  "mcp>=1.12,<3",
+  "starlette>=0.41",
+  "uvicorn>=0.30",
+]
+
+[project.scripts]
+vibegraph-mcp = "vibegraph.server:main"
+vibegraph-viewer = "vibegraph.viewer:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+vibegraph = ["static/*", "static/vendor/*"]

@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="VibeGraph — ein live Baum aus MCP, gerendert mit Vue und D3.">
+  <title>VibeGraph — Live Graph</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div id="app" v-cloak>
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="M16 2.8 27.2 9.4v13.2L16 29.2 4.8 22.6V9.4L16 2.8Z" stroke="currentColor" stroke-width="1.2" opacity=".45"/>
+            <circle cx="16" cy="10" r="2.4" fill="currentColor"/>
+            <circle cx="10" cy="21" r="1.9" fill="currentColor" opacity=".8"/>
+            <circle cx="22" cy="21" r="1.9" fill="currentColor" opacity=".8"/>
+            <path d="M16 12.5v3.2M16 15.7l-5.3 4M16 15.7l5.3 4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <div class="brand-copy">
+          <div class="brand-line">
+            <h1>VibeGraph</h1>
+            <span v-if="isDemo" class="badge badge-demo">Demo</span>
+          </div>
+          <p>Live-Baum aus MCP</p>
+        </div>
+      </div>
+
+      <div class="status-pill" :class="connectionClass" :title="connectionTitle">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span class="status-label">{{ connectionLabel }}</span>
+        <span v-if="revision !== null" class="revision">rev {{ revision }}</span>
+      </div>
+
+      <div class="stat-strip" aria-label="Graph-Statistik">
+        <div class="stat"><strong>{{ stats.nodes }}</strong><span>Knoten</span></div>
+        <div class="stat"><strong>{{ stats.edges }}</strong><span>Kanten</span></div>
+        <div class="stat"><strong>{{ stats.depth }}</strong><span>Tiefe</span></div>
+        <div v-if="stats.detached_trees" class="stat stat-warn">
+          <strong>{{ stats.detached_trees }}</strong><span>losgelöst</span>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-box" :class="{ 'is-active': query.length > 0 }">
+          <svg class="search-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <circle cx="8.7" cy="8.7" r="5.4" stroke="currentColor" stroke-width="1.5"/>
+            <path d="m12.8 12.8 3.7 3.7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <label class="sr-only" for="node-search">Knoten suchen</label>
+          <input
+            id="node-search"
+            v-model="query"
+            type="search"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="Knoten suchen"
+            @keydown.enter.prevent="focusFirstMatch"
+            @keydown.esc.prevent="clearSearch"
+          >
+          <span v-if="query" class="match-count" :class="{ 'is-zero': searchMatches.length === 0 }">{{ searchMatches.length }}</span>
+          <button v-if="query" type="button" class="icon-button clear-search" aria-label="Suche löschen" @click="clearSearch">×</button>
+        </div>
+
+        <div class="zoom-group" role="group" aria-label="Zoom">
+          <button type="button" class="icon-button" title="Herauszoomen (−)" aria-label="Herauszoomen" @click="zoomOut()">−</button>
+          <button type="button" class="icon-button" title="Hineinzoomen (+)" aria-label="Hineinzoomen" @click="zoomIn()">+</button>
+          <button type="button" class="icon-button fit-button" title="Alles einpassen (0)" aria-label="Alles einpassen" @click="fitView()">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main ref="stage" class="stage">
+      <svg ref="svg" class="graph-svg" role="img" aria-label="Live-Graph"></svg>
+
+      <div v-if="loading" class="loading-overlay">
+        <span class="spinner" aria-hidden="true"></span>
+        <p>Verbinde mit dem Graph…</p>
+      </div>
+
+      <div v-if="!loading && stats.nodes <= 1" class="hint-card">
+        <span class="hint-eyebrow">Bereit</span>
+        <h2>Der Root wartet auf den ersten Knoten.</h2>
+        <p>Sag Claude zum Beispiel:</p>
+        <code>a geht zu b</code>
+        <span class="hint-cmd">graph_add_edge(source="a", target="b")</span>
+      </div>
+
+      <div class="legend" aria-hidden="true">
+        <span><i class="legend-dot legend-root"></i>Root</span>
+        <span><i class="legend-dot"></i>Knoten</span>
+        <span v-if="stats.detached_trees"><i class="legend-dash"></i>losgelöst</span>
+      </div>
+
+      <transition-group name="toast" tag="div" class="toasts" aria-live="polite">
+        <div v-for="toast in toasts" :key="toast.id" class="toast" :class="'kind-' + toast.kind">
+          <span class="toast-glyph" aria-hidden="true"></span>
+          <div class="toast-copy">
+            <strong>{{ toast.title }}</strong>
+            <p>{{ toast.text }}</p>
+          </div>
+          <button type="button" class="toast-close" aria-label="Meldung schließen" @click="dismissToast(toast.id)">×</button>
+        </div>
+      </transition-group>
+
+      <transition name="panel">
+        <aside v-if="selectedNode" class="inspector" aria-label="Knoten-Details">
+          <div class="inspector-head">
+            <span class="eyebrow"><i class="pulse-dot"></i>Knoten · Tiefe {{ selectedDepth }}</span>
+            <button type="button" class="icon-button close-panel" aria-label="Details schließen" @click="selectNode(null)">×</button>
+          </div>
+
+          <h2 class="inspector-title">{{ selectedNode.label }}</h2>
+          <code class="inspector-id">{{ selectedNode.id }}</code>
+          <p v-if="selectedNode.note" class="inspector-note">{{ selectedNode.note }}</p>
+
+          <div class="inspector-section">
+            <span class="section-label">Pfad</span>
+            <div class="breadcrumbs">
+              <template v-for="(step, index) in selectedPath" :key="step.id">
+                <span v-if="index" class="crumb-sep" aria-hidden="true">/</span>
+                <button type="button" class="crumb" @click="selectAndFocus(step.id)">{{ step.label }}</button>
+              </template>
+            </div>
+          </div>
+
+          <div class="meta-grid">
+            <div class="meta-cell">
+              <span>Parent</span>
+              <strong>{{ selectedParent ? selectedParent.label : '—' }}</strong>
+            </div>
+            <div class="meta-cell">
+              <span>Kinder</span>
+              <strong>{{ selectedChildren.length }}</strong>
+            </div>
+            <div class="meta-cell">
+              <span>Teilbaum</span>
+              <strong>{{ selectedSubtreeSize }}</strong>
+            </div>
+            <div class="meta-cell">
+              <span>Erstellt</span>
+              <strong>{{ formatDate(selectedNode.created_at) }}</strong>
+            </div>
+          </div>
+
+          <div v-if="selectedChildren.length" class="inspector-section">
+            <span class="section-label">Direkte Kinder</span>
+            <div class="child-list">
+              <button
+                v-for="child in selectedChildren"
+                :key="child.id"
+                type="button"
+                class="child-chip"
+                @click="selectAndFocus(child.id)"
+              >
+                <i :class="'depth-dot depth-' + (selectedDepth + 1)"></i>
+                <span>{{ child.label }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="inspector-actions">
+            <button type="button" class="primary-button" @click="focusSelected()">Zentrieren</button>
+            <button v-if="selectedParent" type="button" class="ghost-button" @click="selectAndFocus(selectedParent.id)">Zum Parent</button>
+          </div>
+
+          <p class="inspector-tip">Diese Ansicht ist read-only. Änderungen kommen von Claude über MCP.</p>
+        </aside>
+      </transition>
+    </main>
+
+    <footer class="statusbar">
+      <span class="tips">
+        <span><kbd>Klick</kbd> Details</span>
+        <span><kbd>Drag</kbd> Pan</span>
+        <span><kbd>Scroll</kbd> Zoom</span>
+        <span><kbd>Esc</kbd> Schließen</span>
+      </span>
+      <span class="endpoint"><i class="live-tick"></i>SSE · {{ endpoint }}</span>
+    </footer>
+  </div>
+
+  <script src="/static/vendor/vue.global.prod.js"></script>
+  <script src="/static/vendor/d3.min.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>
